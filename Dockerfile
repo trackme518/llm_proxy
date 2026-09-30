@@ -26,6 +26,7 @@ RUN pip install --no-cache-dir --upgrade pip \
   && pip install --no-cache-dir fastapi uvicorn gunicorn pydantic sentence-transformers python-dotenv psutil python-multipart pymupdf4llm huggingface_hub
 
 FROM python-base AS embedding-runtime
+LABEL org.opencontainers.image.source=https://github.com/trackme518/llm_proxy
 ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 
@@ -84,6 +85,7 @@ RUN python -m spacy download xx_ent_wiki_sm \
   && python -c "import cs_core_news_sm; cs_core_news_sm.load()"
 
 FROM python-base AS crawler-runtime
+LABEL org.opencontainers.image.source=https://github.com/trackme518/llm_proxy
 ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 
@@ -110,6 +112,7 @@ RUN pip install --no-cache-dir --upgrade pip \
   && pip install --no-cache-dir "litellm>=1.83.0" fastapi uvicorn gunicorn pydantic python-dotenv pymysql orjson cryptography
 
 FROM python-base AS litellm-runtime
+LABEL org.opencontainers.image.source=https://github.com/trackme518/llm_proxy
 ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 
@@ -133,6 +136,7 @@ COPY bun_rag/package.json bun_rag/bun.lock ./
 RUN bun install --frozen-lockfile
 
 FROM bun-base AS bun-runtime
+LABEL org.opencontainers.image.source=https://github.com/trackme518/llm_proxy
 WORKDIR /app/bun_rag
 
 COPY --from=bun-deps /app/bun_rag/node_modules ./node_modules
@@ -149,6 +153,7 @@ ENTRYPOINT ["/entrypoint-bun.sh"]
 # Nginx frontend image (target: nginx-runtime)
 ############################
 FROM nginx:1.29-alpine AS nginx-runtime
+LABEL org.opencontainers.image.source=https://github.com/trackme518/llm_proxy
 COPY nginx/nginx-chatbot.conf /etc/nginx/conf.d/default.conf
 COPY nginx/www /usr/share/nginx/html
 EXPOSE 80

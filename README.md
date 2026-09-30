@@ -283,17 +283,31 @@ ssh -i ~/.ssh/id_ed25519 root@203.0.113.10
 
 ## Deployment (build + deploy via GHCR)
 
-The pipeline is split into two scripts:
+**Normal users do not need to build anything.** The application images are published on GHCR (GitHub Container Registry) for both `linux/amd64` and `linux/arm64`:
 
-* `docker/deploy/build.sh` — builds the five application images (`rag-bun`, `rag-embedding`, `rag-crawler`, `rag-litellm`, `rag-nginx`) for **linux/amd64 + linux/arm64** and pushes them to GHCR (GitHub Container Registry), tagged with the given version and `latest`. MariaDB and Traefik use stock library images and are not built.
-* `docker/deploy/deploy.sh` — pulls those images from GHCR and runs the stack locally, or on the VPS with `--vps`.
+```
+ghcr.io/trackme518/rag-bun
+ghcr.io/trackme518/rag-embedding
+ghcr.io/trackme518/rag-crawler
+ghcr.io/trackme518/rag-litellm
+ghcr.io/trackme518/rag-nginx
+```
+
+To run the stack, just:
+1. Bootstrap your env files from the templates: `./docker/make_env_from_template.sh` (then fill in real values as described below)
+2. Run `./docker/deploy/deploy.sh` — it pulls the published images (`latest` tag) and starts the whole stack. No Docker build, no registry login required (public images).
+
+The two scripts:
+
+* `docker/deploy/deploy.sh` — pulls the published images from GHCR and runs the stack locally, or on the VPS with `--vps`. This is all a user needs.
+* `docker/deploy/build.sh` — maintainer only: builds the five application images (`rag-bun`, `rag-embedding`, `rag-crawler`, `rag-litellm`, `rag-nginx`) for **linux/amd64 + linux/arm64** and pushes them to GHCR, tagged with the given version and `latest`. MariaDB and Traefik use stock library images and are not built.
 
 * make sure scripts are executable:
   * `chmod +x docker/deploy/build.sh docker/deploy/deploy.sh`
   * `chmod +x docker/deploy/update_mariadb_password.sh`
   * `chmod +x docker/deploy/delete_all.sh`
 
-### Build (publish to GHCR)
+### Build (publish to GHCR — maintainers only)
 
 Build instructions:
 
@@ -312,6 +326,8 @@ Commands:
 * `./docker/deploy/build.sh --version v1.1.0` — build and push a specific version tag
 * `./docker/deploy/build.sh --no-cache` — rebuild from scratch, bypassing the build cache
 * `./docker/deploy/build.sh --owner <ghcr-owner>` — override the GHCR namespace (or set `GHCR_OWNER`)
+
+Fork note: only the repository owner can push to the default namespace. If you forked this project and want to publish your own images, build with `./docker/deploy/build.sh --owner <your-github-username>` (after logging in to ghcr.io with your own `write:packages` PAT) — the images are then published under `ghcr.io/<your-github-username>/rag-*`. To deploy your own build, also set `IMAGE_OWNER=ghcr.io/<your-github-username>` in your env file (deploy.sh and docker-compose read it; it defaults to the upstream namespace).
 
 Tip: use `./docker/deploy/build.sh --no-push` to build both platforms (amd64 + arm64) locally, loaded into docker, **without publishing anything** — useful to verify the images build correctly and contain no secrets before a real push. The images appear locally as `ghcr.io/<owner>/rag-*:v1.0.0-amd64` / `-arm64`.
 
