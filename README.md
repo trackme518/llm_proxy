@@ -656,35 +656,6 @@ Always use special brackets "【 】" for citations. If no sentences are relevan
 
 You can use [LMStudio](https://lmstudio.ai/) to run local AI offline models and expose them via OpenAI compatible endpoint. 
 
-## Notes
-
-Remove and unify after DB migration, test with reset: 
-```
-def create_tables(settings: Settings) -> None:
-    with closing(db_conn(settings)) as conn, conn.cursor() as cur:
-        cur.execute(
-            f"""
-            CREATE TABLE IF NOT EXISTS `{settings.table_tokens}` (
-                token VARCHAR(128) PRIMARY KEY,
-                site VARCHAR(255) NOT NULL,
-                created_at DATETIME NOT NULL,
-                expires_at DATETIME NOT NULL,
-                INDEX idx_expires_at (expires_at)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            """
-        )
-
-        cur.execute(
-            f"SHOW COLUMNS FROM `{settings.table_tokens}` LIKE 'site'"
-        )
-        if cur.fetchone() is None:
-            try:
-                cur.execute(f"ALTER TABLE `{settings.table_tokens}` ADD COLUMN site VARCHAR(255) NULL AFTER token")
-            except pymysql.err.OperationalError as exc:
-                if not exc.args or exc.args[0] != 1060:
-                    raise
-```
-
 ## License
 
 This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
