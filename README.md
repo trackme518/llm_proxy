@@ -2,6 +2,8 @@
 
 Are you a museum or gallery and need help with implementation? [Reach out](https://www.muzeumprahy.cz/ai-muzeum/#formular-ai). We provide paid technical support and consultation on how and when to properly use this.
 
+[![Watch Demo](https://img.youtube.com/vi/hacS2QlOUSc/maxresdefault.jpg)](https://youtube.com/shorts/hacS2QlOUSc?feature=share)
+
 ## Explainer for humans
 We have built the RAG (document search) system with content management system and user interface for curators and museum employees (ie non IT users). They can upload and manage books and documents that are later fed to AI chatbot to improve its responses. We have intentionally separated the search document service from the chatbot service itself - so in theory you can connect existing chatbot to the search service (which could even be your personal claude / codex / opencode / hermes... agent ). However, we are also providing a sample chatbot service that is intended to face the public - ie non authenticated users that you want to provide service for free ( ie general public ) and we also show how to embed this chatbot on your existing website. 
 
