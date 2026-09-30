@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrifoBot | Museum of Prague</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!--<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet"> -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded&icon_names=arrow_upward,close,keyboard_arrow_down,mode_comment" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <button id="chatbot-toggler" type="button" aria-label="Toggle chatbot">
+    <span class="material-symbols-rounded open-icon">mode_comment</span>
+    <span class="material-symbols-rounded close-icon">close</span>
+  </button>
+
+  <section class="chatbot-popup" aria-label="Chatbot window">
+
+    <!-- Chatbot Header -->
+    <header class="chat-header">
+            <div class="header-info">
+        <!-- Bot Logo -->
+        <img class="chatbot-logo" src="./assets/avatar.png" alt="Bot logo">
+        <h1 class="logo-text">GrifoBot</h1>
+      </div>
+      <button id="policy-trigger" class="chat-disclaimer" type="button" aria-label="Disclaimer">?</button>
+      <button id="close-chatbot" type="button" class="material-symbols-rounded" aria-label="Close chatbot">keyboard_arrow_down</button>
+
+    </header>
+
+    <!-- Chat Body -->
+    <div class="chat-body" id="chat-body">
+      <!-- Bot Message -->
+      <article class="message bot-message">
+        <img class="bot-avatar" src="./assets/avatar.png" alt="Bot avatar">
+        <div class="message-text" data-i18n="first_message"></div>
+      </article>
+    </div>
+
+    <!-- Chat Footer -->
+    <footer class="chat-footer">
+      <form class="chat-form" id="chat-form">
+        <div class="input-area" id="input-area">
+          <div id="message-input" class="message-input" contenteditable="true" data-i18n="user_input_placeholder" data-placeholder="Message..." spellcheck="false"></div>
+          <div class="user-controls">
+          <button type="submit" id="send-message" class="material-symbols-rounded" aria-label="Send">arrow_upward</button>
+          </div>
+        </div>
+      </form>
+    </footer>
+  </section>
+
+  <script type="module" src="./script.js"></script>
+</body>
+</html>

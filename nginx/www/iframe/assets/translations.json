@@ -1,0 +1,62 @@
+{
+  "en": {
+    "first_message": "Hi there, ask me anything!",
+    "user_input_placeholder": "Your message...",
+    "policy_notice_html": "<strong>Important notice</strong><br>The chatbot can make mistakes and may provide incomplete or outdated information.<br>Chatbot answers do not represent the official position of the Museum of Prague.<br><br>Chat messages are logged and used to improve the chatbot service and for academic research, and are retained for up to 13 months.<br><br>To request data deletion, contact <a href=\"mailto:ai@muzeumprahy.cz{{gdpr_mailto}}\">ai@muzeumprahy.cz</a><br><br>For verified official information, visit <a href=\"https://www.muzeumprahy.cz\" target=\"_blank\" rel=\"noopener noreferrer\">www.muzeumprahy.cz</a>."
+  },
+  "es": {
+    "first_message": "¡Hola! Pregúntame lo que quieras.",
+    "user_input_placeholder": "Tu mensaje...",
+    "policy_notice_html": "<strong>Aviso importante</strong><br>El chatbot puede cometer errores y puede proporcionar información incompleta o desactualizada.<br>Las respuestas del chatbot no representan la posición oficial del Museo de Praga.<br><br>Los mensajes del chat se registran y se utilizan para mejorar el servicio del chatbot y para investigación académica, y se conservan hasta 13 meses.<br><br>Para solicitar la eliminación de datos, contacte a <a href=\"mailto:ai@muzeumprahy.cz{{gdpr_mailto}}\">ai@muzeumprahy.cz</a>.<br><br>Para información oficial verificada, visite <a href=\"https://www.muzeumprahy.cz\" target=\"_blank\" rel=\"noopener noreferrer\">www.muzeumprahy.cz</a>."
+  },
+  "fr": {
+    "first_message": "Salut ! Posez-moi n'importe quelle question.",
+    "user_input_placeholder": "Votre message...",
+    "policy_notice_html": "<strong>Information importante</strong><br>Le chatbot peut faire des erreurs et fournir des informations incomplètes ou obsolètes.<br>Les réponses du chatbot ne représentent pas la position officielle du Musée de Prague.<br><br>Les messages du chat sont enregistrés et utilisés pour améliorer le service du chatbot et pour la recherche académique, et sont conservés jusqu’à 13 mois.<br><br>Pour demander la suppression de vos données, contactez <a href=\"mailto:ai@muzeumprahy.cz{{gdpr_mailto}}\">ai@muzeumprahy.cz</a>.<br><br>Pour des informations officielles vérifiées, visitez <a href=\"https://www.muzeumprahy.cz\" target=\"_blank\" rel=\"noopener noreferrer\">www.muzeumprahy.cz</a>."
+  },
+  "cs": {
+    "first_message": "Ahoj! Zeptej se mě na cokoliv.",
+    "user_input_placeholder": "Vaše zpráva...",
+    "policy_notice_html": "<strong>Důležité upozornění</strong><br>Chatbot může chybovat a může poskytovat neúplné nebo zastaralé informace.<br>Odpovědi chatbota nepředstavují oficiální stanovisko Muzea Prahy.<br><br>Zprávy v chatu se ukládají a používají ke zlepšování služby chatbota a pro akademický výzkum; uchovávají se po dobu až 13 měsíců.<br><br>Pokud chcete požádat o výmaz dat, kontaktujte <a href=\"mailto:ai@muzeumprahy.cz{{gdpr_mailto}}\">ai@muzeumprahy.cz</a>.<br><br>Pro ověřené oficiální informace navštivte <a href=\"https://www.muzeumprahy.cz\" target=\"_blank\" rel=\"noopener noreferrer\">www.muzeumprahy.cz</a>."
+  },
+  "uk": {
+    "first_message": "Привіт! Запитай мене про що завгодно.",
+    "user_input_placeholder": "Ваше повідомлення...",
+    "policy_notice_html": "<strong>Важливе повідомлення</strong><br>Чатбот може помилятися та надавати неповну або застарілу інформацію.<br>Відповіді чатбота не є офіційною позицією Музею Праги.<br><br>Повідомлення в чаті зберігаються та використовуються для покращення сервісу чатбота і для академічних досліджень, і зберігаються до 13 місяців.<br><br>Щоб подати запит на видалення даних, зверніться на <a href=\"mailto:ai@muzeumprahy.cz{{gdpr_mailto}}\">ai@muzeumprahy.cz</a>.<br><br>Для перевіреної офіційної інформації відвідайте <a href=\"https://www.muzeumprahy.cz\" target=\"_blank\" rel=\"noopener noreferrer\">www.muzeumprahy.cz</a>."
+  },
+  "de": {
+    "first_message": "Hallo! Frag mich alles, was du möchtest.",
+    "user_input_placeholder": "Deine Nachricht...",
+    "policy_notice_html": "<strong>Wichtiger Hinweis</strong><br>Der Chatbot kann Fehler machen und unvollständige oder veraltete Informationen liefern.<br>Die Antworten des Chatbots stellen nicht die offizielle Position des Prager Stadtmuseums dar.<br><br>Chat-Nachrichten werden protokolliert und zur Verbesserung des Chatbot-Dienstes sowie für akademische Forschung verwendet und bis zu 13 Monate aufbewahrt.<br><br>Um die Löschung Ihrer Daten zu beantragen, kontaktieren Sie <a href=\"mailto:ai@muzeumprahy.cz{{gdpr_mailto}}\">ai@muzeumprahy.cz</a>.<br><br>Für verifizierte offizielle Informationen besuchen Sie <a href=\"https://www.muzeumprahy.cz\" target=\"_blank\" rel=\"noopener noreferrer\">www.muzeumprahy.cz</a>."
+  },
+  "ja": {
+    "first_message": "こんにちは！何でも聞いてください。",
+    "user_input_placeholder": "あなたのメッセージ...",
+    "policy_notice_html": "<strong>重要なお知らせ</strong><br>チャットボットは誤った回答をする可能性があり、不完全または古い情報を提供する場合があります。<br>チャットボットの回答はプラハ博物館の公式見解を示すものではありません。<br><br>チャットの記録は、チャットボットサービスの改善および学術研究のために利用され、最大13か月保存されます。<br><br>データ削除を希望する場合は、<a href=\"mailto:ai@muzeumprahy.cz{{gdpr_mailto}}\">ai@muzeumprahy.cz</a> へ連絡してください。<br><br>公式に確認された情報は <a href=\"https://www.muzeumprahy.cz\" target=\"_blank\" rel=\"noopener noreferrer\">www.muzeumprahy.cz</a> をご覧ください。"
+  },
+  "ko": {
+    "first_message": "안녕하세요! 무엇이든 물어보세요.",
+    "user_input_placeholder": "메시지를 입력하세요...",
+    "policy_notice_html": "<strong>중요 안내</strong><br>챗봇은 오류를 범할 수 있으며 불완전하거나 오래된 정보를 제공할 수 있습니다.<br>챗봇의 답변은 프라하 박물관의 공식 입장을 의미하지 않습니다.<br><br>채팅 기록은 챗봇 서비스 개선 및 학술 연구 목적으로 사용되며 최대 13개월 보관됩니다.<br><br>데이터 삭제를 요청하려면 <a href=\"mailto:ai@muzeumprahy.cz{{gdpr_mailto}}\">ai@muzeumprahy.cz</a>로 연락하세요.<br><br>검증된 공식 정보는 <a href=\"https://www.muzeumprahy.cz\" target=\"_blank\" rel=\"noopener noreferrer\">www.muzeumprahy.cz</a>에서 확인하세요."
+  },
+  "sk": {
+    "first_message": "Ahoj! Opýtaj sa ma na čokoľvek.",
+    "user_input_placeholder": "Vaša správa...",
+    "policy_notice_html": "<strong>Dôležité upozornenie</strong><br>Chatbot môže robiť chyby a poskytovať neúplné alebo zastarané informácie.<br>Odpovede chatbota nepredstavujú oficiálne stanovisko Múzea Prahy.<br><br>Správy v chate sa zaznamenávajú a používajú na zlepšenie služby chatbota a na akademický výskum a uchovávajú sa až 13 mesiacov.<br><br>Ak chcete požiadať o vymazanie údajov, kontaktujte <a href=\"mailto:ai@muzeumprahy.cz{{gdpr_mailto}}\">ai@muzeumprahy.cz</a>.<br><br>Pre overené oficiálne informácie navštívte <a href=\"https://www.muzeumprahy.cz\" target=\"_blank\" rel=\"noopener noreferrer\">www.muzeumprahy.cz</a>."
+  },
+  "hr": {
+    "first_message": "Bok! Pitaj me bilo što.",
+    "user_input_placeholder": "Vaša poruka...",
+    "policy_notice_html": "<strong>Važna obavijest</strong><br>Chatbot može pogriješiti i pružiti nepotpune ili zastarjele informacije.<br>Odgovori chatbota ne predstavljaju službeni stav Muzeja Praga.<br><br>Poruke u chatu bilježe se i koriste za poboljšanje chatbot usluge i za akademska istraživanja te se čuvaju do 13 mjeseci.<br><br>Za zahtjev za brisanje podataka kontaktirajte <a href=\"mailto:ai@muzeumprahy.cz{{gdpr_mailto}}\">ai@muzeumprahy.cz</a>.<br><br>Za provjerene službene informacije posjetite <a href=\"https://www.muzeumprahy.cz\" target=\"_blank\" rel=\"noopener noreferrer\">www.muzeumprahy.cz</a>."
+  },
+  "pl": {
+    "first_message": "Cześć! Zapytaj mnie o cokolwiek.",
+    "user_input_placeholder": "Twoja wiadomość...",
+    "policy_notice_html": "<strong>Ważna informacja</strong><br>Chatbot może się mylić i podawać niepełne lub nieaktualne informacje.<br>Odpowiedzi chatbota nie stanowią oficjalnego stanowiska Muzeum Pragi.<br><br>Wiadomości czatu są rejestrowane i wykorzystywane do ulepszania usługi chatbota oraz do badań akademickich, a także przechowywane do 13 miesięcy.<br><br>Aby zażądać usunięcia danych, skontaktuj się z <a href=\"mailto:ai@muzeumprahy.cz{{gdpr_mailto}}\">ai@muzeumprahy.cz</a>.<br><br>Aby uzyskać zweryfikowane informacje oficjalne, odwiedź <a href=\"https://www.muzeumprahy.cz\" target=\"_blank\" rel=\"noopener noreferrer\">www.muzeumprahy.cz</a>."
+  },
+  "zh": {
+    "first_message": "你好！随时问我任何问题。",
+    "user_input_placeholder": "你的消息...",
+    "policy_notice_html": "<strong>重要提示</strong><br>聊天机器人可能会出错，并可能提供不完整或过时的信息。<br>聊天机器人的回答不代表布拉格博物馆的官方立场。<br><br>聊天记录将被保存，并用于改进聊天机器人服务及学术研究，保存期限最长为13个月。<br><br>如需请求删除数据，请联系 <a href=\"mailto:ai@muzeumprahy.cz{{gdpr_mailto}}\">ai@muzeumprahy.cz</a>。<br><br>如需经过核实的官方信息，请访问 <a href=\"https://www.muzeumprahy.cz\" target=\"_blank\" rel=\"noopener noreferrer\">www.muzeumprahy.cz</a>。"
+  }
+}

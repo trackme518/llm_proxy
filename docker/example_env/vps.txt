@@ -1,0 +1,35 @@
+# ========================================
+# VPS deployment settings for docker/deploy.sh --vps
+# ========================================
+# VPS SSH endpoint
+VPS_HOST=your-vps-host-or-ip
+VPS_USER=root
+VPS_PORT=22
+
+# SSH key used for VPS login (absolute path or path relative to project root)
+SSH_KEY_PATH=~/.ssh/id_ed25519
+
+# Directory on VPS where compose/env/files are uploaded and deployed from
+VPS_REMOTE_DIR=/opt/mcp-rag
+
+# Target platform for VPS image builds: amd64|arm64|linux/amd64|linux/arm64
+VPS_ARCH=linux/amd64
+
+# Optional: where to store temporary archives locally before upload
+LOCAL_ARCHIVE_DIR=docker/dist
+
+# Optional: basename for saved image archive files (<name>.tar.gz)
+ARCHIVE_BASENAME=rag-images
+
+# ========================================
+# Overwrite any other variables - this file takes precedence
+# ========================================
+
+# Your VPS domain name - used to issue SSL cert for HTTPS
+DOMAIN_NAME=your-vps-domain.example.com
+# we need to point to public traefik address https://yourdomain.com/mcp
+mcp_url=https://your-vps-domain.example.com/mcp
+# AI model variables
+LITELLM_API_BASE=https://api.openai.com/v1
+LITELLM_MODEL=gpt-5.4-mini
+thinking_model=true

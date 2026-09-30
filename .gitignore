@@ -1,0 +1,24 @@
+# Environment file - just local placeholder as a template
+*.env
+# Docker production ready images
+docker/dist
+
+# Python virtual environment
+embedding/venv/
+
+# predownloaded embeddings model
+embedding/models
+
+# Node modules
+*.DS_Store
+docker/dist
+
+embedding/.env
+__pycache__
+
+litellm/config.json
+
+docker/secrets
+
+# MariaDB backups
+docker/deploy/db_backup

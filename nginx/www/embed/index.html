@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot iframe embed example</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1f2440;
+      background: linear-gradient(#eeeeff, #c8c7ff);
+    }
+
+    .container {
+      width: min(760px, 92vw);
+      margin: 0 auto;
+      padding: 56px 0 140px;
+      position: relative;
+      z-index: 2;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      margin-bottom: 18px;
+    }
+
+    p {
+      margin: 0 0 16px;
+    }
+
+    .embed-code-block {
+      position: relative;
+      margin: 18px 0 22px;
+      padding: 16px 50px 16px 16px;
+      border-radius: 12px;
+      background: #151a2f;
+      color: #e9ecff;
+      border: 1px solid #2f365f;
+      overflow-x: hidden;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.86rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .embed-code-block code {
+      display: block;
+      user-select: text;
+      -webkit-user-select: text;
+      cursor: text;
+    }
+
+    .copy-embed-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: #2a3158;
+      color: #eef0ff;
+      transition: background-color 1.6s ease, transform 0.15s ease;
+    }
+
+    .copy-embed-btn:hover {
+      background: #3a4478;
+    }
+
+    .copy-embed-btn:focus:not(:active) {
+      animation: copyFlash 1.8s ease-out;
+    }
+
+    .copy-embed-btn:active {
+      animation: none;
+      background-color: #43d17b;
+      transform: scale(1.02);
+    }
+
+    .copy-embed-btn:focus-visible {
+      outline: 2px solid #8ea2ff;
+      outline-offset: 2px;
+    }
+
+    @keyframes copyFlash {
+      0% {
+        background-color: #43d17b;
+      }
+
+      12% {
+        background-color: #43d17b;
+      }
+
+      100% {
+        background-color: #2a3158;
+      }
+    }
+
+    .copy-feedback {
+      font-size: 0.85rem;
+      color: #39438a;
+      min-height: 1.2em;
+      margin-top: -8px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding-bottom: 110px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>Sample page with embedded chatbot iframe</h1>
+    <p>
+      Use this embed snippet in your app. Click the clipboard icon to copy it, then paste it into your page.
+    </p>
+    <p>
+      <strong>To customize:</strong> Change the <code>site=web_museum_of_prague</code> query parameter to your desired site name.
+    </p>
+
+    <div class="embed-code-block" aria-label="Embed code">
+      <button id="copy-embed-btn" class="copy-embed-btn" type="button" onclick="return copySnippet('embed-code')" aria-label="Copy embed code" title="Copy embed code">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M9 9.75A2.25 2.25 0 0 1 11.25 7.5h8.25A2.25 2.25 0 0 1 21.75 9.75V18a2.25 2.25 0 0 1-2.25 2.25h-8.25A2.25 2.25 0 0 1 9 18V9.75Z" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M14.25 7.5V6A2.25 2.25 0 0 0 12 3.75H3.75A2.25 2.25 0 0 0 1.5 6v8.25A2.25 2.25 0 0 0 3.75 16.5H5.25" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </button>
+<code id="embed-code"></code>
+    </div>
+    <div id="copy-feedback" class="copy-feedback" aria-live="polite"></div>
+
+
+    <iframe
+    id="chatbot-iframe"
+    style="display:none;position:fixed;right:0;bottom:0;left:auto;top:auto;width:120px;height:120px;border:0;background:transparent;z-index:999;pointer-events:auto;"
+    title="GrifoBot widget"
+    loading="eager"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allow="clipboard-read; clipboard-write"
+  ></iframe>
+
+  <script>
+    (function () {
+      const logDebug = () => {};
+      const logWarn = () => {};
+
+      const iframe = document.getElementById("chatbot-iframe");
+      const codeEl = document.getElementById("embed-code");
+
+
+      const iframeUrl = new URL("../iframe/index.html", window.location.href);
+      iframeUrl.searchParams.set("site", "web_museum_of_prague");
+      const iframeSrc = iframeUrl.toString();
+
+      logDebug("[Grifo embed] resolved iframe source", {
+        page: window.location.href,
+        iframeSrc,
+      });
+
+            const embedSnippet = `<iframe
+id="chatbot-iframe"
+src="${iframeSrc}"
+title="GrifoBot widget"
+loading="eager"
+referrerpolicy="strict-origin-when-cross-origin"
+allow="clipboard-read; clipboard-write"
+style="position:fixed;right:0;bottom:0;left:auto;top:auto;width:120px;height:120px;border:0;background:transparent;z-index:999;pointer-events:auto;">
+</iframe>
+<script>
+(function setupGrifoIframeLayout() {
+  const logDebug = () => {};
+  const logWarn = () => {};
+
+  const iframe = document.getElementById("chatbot-iframe");
+  if (!iframe) return;
+
+  const iframeOrigin = new URL(${JSON.stringify(iframeSrc)}).origin;
+  const BREAKPOINT = 768;
+  const PAGE_MARGIN = 16;
+  const SHADOW_GUTTER = 24;
+  const CLOSED_SIZE = 72;
+  const DESKTOP_OPEN_WIDTH = 420;
+  const DESKTOP_OPEN_HEIGHT = 700;
+
+  let isOpen = false;
+
+  function postHostViewport(reason = "unknown") {
+    if (!iframe.contentWindow) return;
+
+    const payload = {
+      type: "grifo:host-viewport",
+      width: window.innerWidth,
+    };
+
+    logDebug("[Grifo embed] postMessage -> iframe", {
+      reason,
+      payload,
+      targetOrigin: iframeOrigin,
+    });
+
+    iframe.contentWindow.postMessage(payload, iframeOrigin);
+  }
+
+  function applyIframeLayout() {
+    const isMobile = window.innerWidth < BREAKPOINT;
+    const viewportMaxWidth = Math.max(240, window.innerWidth - PAGE_MARGIN * 2);
+    const viewportMaxHeight = Math.max(280, window.innerHeight - PAGE_MARGIN * 2);
+
+        const contentWidth = isOpen
+      ? (isMobile ? viewportMaxWidth : DESKTOP_OPEN_WIDTH)
+      : CLOSED_SIZE;
+    const contentHeight = isOpen
+      ? (isMobile ? viewportMaxHeight : DESKTOP_OPEN_HEIGHT)
+      : CLOSED_SIZE;
+
+    iframe.style.position = "fixed";
+    iframe.style.border = "0";
+    iframe.style.background = "transparent";
+    iframe.style.zIndex = "999";
+    iframe.style.pointerEvents = "auto";
+
+    if (isOpen && isMobile) {
+      iframe.style.left = "0";
+      iframe.style.top = "0";
+      iframe.style.right = "auto";
+      iframe.style.bottom = "auto";
+      iframe.style.inset = "0";
+      iframe.style.width = "100vw";
+      iframe.style.height = "100dvh";
+      return;
+    }
+
+    iframe.style.left = "auto";
+    iframe.style.top = "auto";
+    iframe.style.inset = "auto";
+    iframe.style.right = String(Math.max(0, PAGE_MARGIN - SHADOW_GUTTER)) + "px";
+    iframe.style.bottom = String(Math.max(0, PAGE_MARGIN - SHADOW_GUTTER)) + "px";
+    iframe.style.width = String(contentWidth + SHADOW_GUTTER * 2) + "px";
+    iframe.style.height = String(contentHeight + SHADOW_GUTTER * 2) + "px";
+  }
+
+  function attachSameOriginHooks(reason) {
+    try {
+      const doc = iframe.contentDocument;
+      const body = doc?.body;
+      const toggler = doc?.getElementById("chatbot-toggler");
+      const closeBtn = doc?.getElementById("close-chatbot");
+
+      logDebug("[Grifo embed] iframe hook check", {
+        reason,
+        canAccessDocument: !!doc,
+        hasBody: !!body,
+        hasToggler: !!toggler,
+        hasCloseButton: !!closeBtn,
+      });
+
+      if (toggler && !toggler.__grifoEmbedDebugBound) {
+        toggler.__grifoEmbedDebugBound = true;
+        toggler.addEventListener("click", () => {
+          logDebug("[Grifo embed] detected click inside iframe on toggler");
+        });
+      }
+
+      if (closeBtn && !closeBtn.__grifoEmbedDebugBound) {
+        closeBtn.__grifoEmbedDebugBound = true;
+        closeBtn.addEventListener("click", () => {
+          logDebug("[Grifo embed] detected click inside iframe on close button");
+        });
+      }
+
+      if (body && !body.__grifoEmbedObserverBound) {
+        body.__grifoEmbedObserverBound = true;
+        const observer = new MutationObserver(() => {
+          const bodyOpen = body.classList.contains("show-chatbot");
+          logDebug("[Grifo embed] observed iframe body class change", {
+            bodyClass: body.className,
+            bodyOpen,
+            previousIsOpen: isOpen,
+          });
+          if (bodyOpen !== isOpen) {
+            isOpen = bodyOpen;
+            applyIframeLayout();
+          }
+        });
+        observer.observe(body, { attributes: true, attributeFilter: ["class"] });
+      }
+    } catch (error) {
+      logDebug("[Grifo embed] same-origin iframe hooks unavailable", {
+        reason,
+        error: String(error),
+      });
+    }
+  }
+
+  window.addEventListener("message", (event) => {
+    if (event.source !== iframe.contentWindow) return;
+
+    const type = event.data?.type;
+    if (type !== "grifo:open" && type !== "grifo:close" && type !== "grifo:request-host-viewport") return;
+
+    logDebug("[Grifo embed] postMessage <- iframe", {
+      type,
+      origin: event.origin,
+      expectedOrigin: iframeOrigin,
+      payload: event.data,
+    });
+
+    if (event.origin !== iframeOrigin) {
+      logWarn("[Grifo embed] Received iframe state message from unexpected origin:", event.origin, "expected:", iframeOrigin);
+      return;
+    }
+
+    if (type === "grifo:request-host-viewport") {
+      postHostViewport("iframe_requested");
+      return;
+    }
+
+    if (type === "grifo:open") {
+      isOpen = true;
+      applyIframeLayout();
+      postHostViewport("chat_open");
+      return;
+    }
+
+    isOpen = false;
+    applyIframeLayout();
+    postHostViewport("chat_close");
+  });
+
+  window.addEventListener("resize", () => {
+    logDebug("[Grifo embed] window resize", {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      isOpen,
+    });
+    applyIframeLayout();
+    postHostViewport("window_resize");
+  }, { passive: true });
+
+  iframe.addEventListener("load", () => {
+    postHostViewport("iframe_load");
+  });
+
+  applyIframeLayout();
+  postHostViewport("initial_setup");
+  attachSameOriginHooks("initial_setup");
+  setTimeout(() => attachSameOriginHooks("delayed_setup_300ms"), 300);
+})();
+<\/script>
+
+<!-- To use a different site, change the 'site' query parameter in the src URL -->
+<!-- The iframe sends postMessage events with type 'grifo:open' and 'grifo:close' -->`;
+      
+            const safeLoadScript = `
+(async function safeLoadIframe(url, timeout = 8000) {
+    const logDebug = () => {};
+    const logWarn = () => {};
+
+    const iframe = document.getElementById("chatbot-iframe");
+    if (!iframe) return;
+
+    const iframeOrigin = new URL(url).origin;
+    const BREAKPOINT = 768;
+    const PAGE_MARGIN = 16;
+    const SHADOW_GUTTER = 24;
+    const CLOSED_SIZE = 72;
+    const DESKTOP_OPEN_WIDTH = 420;
+    const DESKTOP_OPEN_HEIGHT = 700;
+
+    let loaded = false;
+    let isOpen = false;
+
+    function postHostViewport(reason = "unknown") {
+      if (!iframe.contentWindow) return;
+
+      const payload = {
+        type: "grifo:host-viewport",
+        width: window.innerWidth,
+      };
+
+      logDebug("[Grifo embed] postMessage -> iframe", {
+        reason,
+        payload,
+        targetOrigin: iframeOrigin,
+      });
+
+      iframe.contentWindow.postMessage(payload, iframeOrigin);
+    }
+
+    function applyIframeLayout() {
+      const isMobile = window.innerWidth < BREAKPOINT;
+      const viewportMaxWidth = Math.max(240, window.innerWidth - PAGE_MARGIN * 2);
+      const viewportMaxHeight = Math.max(280, window.innerHeight - PAGE_MARGIN * 2);
+
+      const contentWidth = isOpen
+        ? (isMobile ? viewportMaxWidth : DESKTOP_OPEN_WIDTH)
+        : CLOSED_SIZE;
+      const contentHeight = isOpen
+        ? (isMobile ? viewportMaxHeight : DESKTOP_OPEN_HEIGHT)
+        : CLOSED_SIZE;
+
+      iframe.style.position = "fixed";
+      iframe.style.border = "0";
+      iframe.style.background = "transparent";
+      iframe.style.zIndex = "999";
+      iframe.style.pointerEvents = "auto";
+
+      if (isOpen && isMobile) {
+        iframe.style.left = "0";
+        iframe.style.top = "0";
+        iframe.style.right = "auto";
+        iframe.style.bottom = "auto";
+        iframe.style.inset = "0";
+        iframe.style.width = "100vw";
+        iframe.style.height = "100dvh";
+        return;
+      }
+
+      iframe.style.left = "auto";
+      iframe.style.top = "auto";
+      iframe.style.inset = "auto";
+      iframe.style.right = String(Math.max(0, PAGE_MARGIN - SHADOW_GUTTER)) + "px";
+      iframe.style.bottom = String(Math.max(0, PAGE_MARGIN - SHADOW_GUTTER)) + "px";
+      iframe.style.width = String(contentWidth + SHADOW_GUTTER * 2) + "px";
+      iframe.style.height = String(contentHeight + SHADOW_GUTTER * 2) + "px";
+    }
+
+    function attachSameOriginHooks(reason) {
+      try {
+        const doc = iframe.contentDocument;
+        const body = doc?.body;
+        const toggler = doc?.getElementById("chatbot-toggler");
+        const closeBtn = doc?.getElementById("close-chatbot");
+
+        logDebug("[Grifo embed] iframe hook check", {
+          reason,
+          canAccessDocument: !!doc,
+          hasBody: !!body,
+          hasToggler: !!toggler,
+          hasCloseButton: !!closeBtn,
+        });
+
+        if (toggler && !toggler.__grifoEmbedDebugBound) {
+          toggler.__grifoEmbedDebugBound = true;
+          toggler.addEventListener("click", () => {
+            logDebug("[Grifo embed] detected click inside iframe on toggler");
+          });
+        }
+
+        if (closeBtn && !closeBtn.__grifoEmbedDebugBound) {
+          closeBtn.__grifoEmbedDebugBound = true;
+          closeBtn.addEventListener("click", () => {
+            logDebug("[Grifo embed] detected click inside iframe on close button");
+          });
+        }
+
+        if (body && !body.__grifoEmbedObserverBound) {
+          body.__grifoEmbedObserverBound = true;
+          const observer = new MutationObserver(() => {
+            const bodyOpen = body.classList.contains("show-chatbot");
+            logDebug("[Grifo embed] observed iframe body class change", {
+              bodyClass: body.className,
+              bodyOpen,
+              previousIsOpen: isOpen,
+            });
+            if (bodyOpen !== isOpen) {
+              isOpen = bodyOpen;
+              applyIframeLayout();
+            }
+          });
+          observer.observe(body, { attributes: true, attributeFilter: ["class"] });
+        }
+      } catch (error) {
+        logDebug("[Grifo embed] same-origin iframe hooks unavailable", {
+          reason,
+          error: String(error),
+        });
+      }
+    }
+
+    const onMessage = (event) => {
+      if (event.source !== iframe.contentWindow) return;
+
+      const type = event.data?.type;
+      if (type !== "grifo:open" && type !== "grifo:close" && type !== "grifo:request-host-viewport") return;
+
+      logDebug("[Grifo embed] postMessage <- iframe", {
+        type,
+        origin: event.origin,
+        expectedOrigin: iframeOrigin,
+        payload: event.data,
+      });
+
+      if (event.origin !== iframeOrigin) {
+        logWarn("[Grifo embed] Received iframe state message from unexpected origin:", event.origin, "expected:", iframeOrigin);
+        return;
+      }
+
+      if (type === "grifo:request-host-viewport") {
+        postHostViewport("iframe_requested");
+        return;
+      }
+
+      if (type === "grifo:open") {
+        isOpen = true;
+        applyIframeLayout();
+        postHostViewport("chat_open");
+        return;
+      }
+
+      isOpen = false;
+      applyIframeLayout();
+      postHostViewport("chat_close");
+    };
+
+    window.addEventListener("message", onMessage);
+    window.addEventListener("resize", () => {
+      logDebug("[Grifo embed] window resize", {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        isOpen,
+      });
+      applyIframeLayout();
+      postHostViewport("window_resize");
+    }, { passive: true });
+
+    iframe.style.display = "none";
+    iframe.src = "about:blank";
+    applyIframeLayout();
+    postHostViewport("initial_blank");
+    attachSameOriginHooks("initial_blank");
+
+    const timer = setTimeout(() => {
+      if (!loaded) {
+        iframe.src = "about:blank";
+        iframe.style.display = "none";
+      }
+    }, timeout);
+
+    iframe.onload = () => {
+      loaded = true;
+      clearTimeout(timer);
+      iframe.style.display = "block";
+      logDebug("[Grifo embed] iframe loaded", { url });
+      applyIframeLayout();
+      postHostViewport("iframe_onload");
+      attachSameOriginHooks("iframe_onload");
+      setTimeout(() => attachSameOriginHooks("iframe_onload_delayed_300ms"), 300);
+    };
+
+    iframe.onerror = () => {
+      loaded = false;
+      clearTimeout(timer);
+      iframe.style.display = "none";
+      iframe.src = "about:blank";
+    };
+
+    try {
+      const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+      logDebug("[Grifo embed] HEAD check", { url, status: res.status });
+      if (res.status !== 200) {
+        throw new Error("HTTP status is not 200");
+      }
+    } catch (error) {
+      logWarn("[Grifo embed] HEAD check failed", { url, error: String(error) });
+      clearTimeout(timer);
+      iframe.style.display = "none";
+      return;
+    }
+
+    logDebug("[Grifo embed] assigning iframe src", { url });
+    iframe.src = url;
+  })(${JSON.stringify(iframeSrc)});`;
+
+      //merge and make one liner
+      const safeEmbedSnippet = `${embedSnippet}<script>\n${safeLoadScript}<\/script>`.replace(/\s+/g, " ").trim();
+
+      codeEl.textContent = `${embedSnippet}`.replace(/\s+/g, " ").trim();
+
+      //safeCodeEl.textContent = safeEmbedSnippet;
+      
+      //execute in the page to load the iframe immediately for demo purposes
+      new Function(safeLoadScript)();
+
+      async function copyToClipboard(text) {
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return true;
+          }
+        } catch {
+          // Fallback below.
+        }
+
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "true");
+        textarea.style.position = "fixed";
+        textarea.style.top = "0";
+        textarea.style.left = "0";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+
+        let copied = false;
+        try {
+          copied = document.execCommand("copy");
+        } catch {
+          copied = false;
+        }
+
+        document.body.removeChild(textarea);
+        return copied;
+      }
+
+      window.copySnippet = async function copySnippet(codeElementId) {
+        const textToCopy = (document.getElementById(codeElementId)?.innerText || "").trim();
+
+        if (!textToCopy) {
+          return false;
+        }
+
+        await copyToClipboard(textToCopy || "");
+        return false;
+      };
+
+    })();
+  </script>
+
+</body>
+</html>

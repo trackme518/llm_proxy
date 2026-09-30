@@ -1,0 +1,75 @@
+# This is an example .env file for local development. Copy this to .env and fill in the values. Do NOT use the example API keys in production.
+# DEFAULT_SUPERADMIN_API_KEY is initial API key with highest privliges but not bound to organization.
+# It will be added to db on first run if no API keys are found in the database.
+# generate with openssl rand -hex 32
+# ========================================
+# BUN SERVER (MCP server for DOC search)
+# ========================================
+DEFAULT_SUPERADMIN_API_KEY=samplepassword
+# Default admin key bound to default organization - used for automated tests
+# generate with openssl rand -hex 32
+DEFAULT_ADMIN_API_KEY=samplepassword
+# generate with openssl rand -hex 32
+API_KEY_SECRET=samplepassword
+BUN_PORT=3000
+BUN_HOST="0.0.0.0"
+# DB settings
+DB_TABLE_CHUNKS=document_chunks
+DB_TABLE_KEYS=api_keys
+DB_TABLE_METADATA=document_metadata
+# When ingesting document, it will timeout the individual request to python server if it takes longer than X Ms
+# The python server also have a worker timeout that will abort whatever task if longer than this
+REQUEST_TIMEOUT=90000
+# how many embedding to process in parallel
+EMBEDDING_BATCH_THRESHOLD=10
+# both of the above settings need to be tested to set properly, this is for KVM4 Hostinger VPS
+# ========================================
+# MARIA DB (shared between containers)
+# ========================================
+# generate with command: openssl rand -hex 32
+MARIADB_ROOT_PASSWORD=samplepassword
+MARIADB_DATABASE=rag
+DB_USER=root
+# for local build use DB_HOST=localhost and for docker use DB_HOST=mariadb
+DB_HOST=mariadb
+DB_PORT=3306
+# ========================================
+# Web crawler services
+CRAWLER_URL=http://crawler:11235
+INTERNAL_LITELLM_URL=http://litellm:8001
+# ========================================
+# Python server for embeddings inference
+# ========================================
+DB_VECTOR_DIM=768
+LOAD_LOCAL_EMBEDDING=false
+HF_TOKEN=hf_yourtoken
+PYTHON_PORT=8000
+EMBEDDINGS_URL=http://embedding:8000/v1/embeddings
+# Model ID sent to the selected OpenAI-compatible endpoint.
+EMBEDDINGS_MODEL=google/embeddinggemma-300m
+# EMBEDDINGS_API_KEY is not used currently, it runs on internal docker newtwork only - only valid if you would set EMBEDDINGS_URL to external service
+EMBEDDINGS_API_KEY=apiKeyForEmbedding
+EMBEDDINGS_METRICS_URL=http://embedding:8000/metrics
+CONVERT_MARKDOWN_URL=http://embedding:8000/extract-markdown
+INTERNAL_LITELLM_URL=http://litellm:8001
+BUN_HOST=0.0.0.0
+PYTHON_HOST=0.0.0.0
+# ========================================
+# Crawler service (Scrapy + trafilatura-rs (rust wrapper))
+# used to crawl websites - pass to bun_rag to embed as documents
+# ========================================
+CRAWLER_URL=http://crawler:11235
+# ========================================
+# LiteLLM FastAPI chatbot proxy
+# ========================================
+# uses litellm/config.json loaded as docker secret
+# ========================================
+# Traefik reverse load balancing proxy
+# ========================================
+# provide your domain name that will be used to issue lets encrypt cert for TLS, DOMAIN_NAME=yourdomain.com
+# do not input localhost - that will work automatically, set vps domain or fictional one
+DOMAIN_NAME="local.invalid"
+# TRAEFIK_PASSWORD must be an htpasswd hash, not plain text.
+# htpasswd -nbs admin 'samplepassword'
+TRAEFIK_PASSWORD={SHA}samplepassword=
+TRAEFIK_USERNAME=admin

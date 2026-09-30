@@ -1,0 +1,298 @@
+name: mcp-rag
+
+services:
+  mariadb:
+    image: mariadb:12.1.2
+    pull_policy: if_not_present
+    platform: ${COMPOSE_PLATFORM}
+    container_name: mariadb
+    restart: unless-stopped
+    hostname: mariadb
+    environment:
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
+      - MARIADB_USER=${DB_USER}
+      - MARIADB_PASSWORD_FILE=/run/secrets/MARIADB_APP_PASSWORD
+      - MARIADB_HOST=${DB_HOST}
+      - MARIADB_PORT=${DB_PORT}
+      - MARIADB_ROOT_PASSWORD_FILE=/run/secrets/MARIADB_ROOT_PASSWORD
+    secrets:
+      - source: mariadb_MARIADB_ROOT_PASSWORD
+        target: MARIADB_ROOT_PASSWORD
+      - source: mariadb_MARIADB_APP_PASSWORD
+        target: MARIADB_APP_PASSWORD
+    volumes:
+      - rag-mariadb-data:/var/lib/mysql
+    networks:
+      - rag-net
+
+  embedding:
+    image: embedding:vps-amd64
+    pull_policy: if_not_present
+    platform: ${COMPOSE_PLATFORM}
+    container_name: embedding
+    restart: unless-stopped
+    environment:
+      - PYTHON_PORT=${PYTHON_PORT}
+      - PYTHON_HOST=${PYTHON_HOST}
+      - EMBEDDINGS_MODEL=${EMBEDDINGS_MODEL:-google/embeddinggemma-300m}
+      - LOAD_LOCAL_EMBEDDING=${LOAD_LOCAL_EMBEDDING}
+      - REQUEST_TIMEOUT=${REQUEST_TIMEOUT}
+      - HF_TOKEN_FILE=/run/secrets/HF_TOKEN
+    secrets:
+      - source: embedding_HF_TOKEN
+        target: HF_TOKEN
+    networks:
+      - rag-net
+    depends_on:
+      - mariadb
+
+  bun-rag:
+    image: bun-rag:vps-amd64
+    pull_policy: if_not_present
+    platform: ${COMPOSE_PLATFORM}
+    container_name: bun-rag
+    restart: unless-stopped
+    environment:
+      - BUN_PORT=${BUN_PORT}
+      - BUN_HOST=${BUN_HOST}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
+      - DB_TABLE_CHUNKS=${DB_TABLE_CHUNKS}
+      - DB_TABLE_KEYS=${DB_TABLE_KEYS}
+      - DB_TABLE_METADATA=${DB_TABLE_METADATA}
+      - DB_VECTOR_DIM=${DB_VECTOR_DIM}
+      - REQUEST_TIMEOUT=${REQUEST_TIMEOUT}
+      - EMBEDDING_BATCH_THRESHOLD=${EMBEDDING_BATCH_THRESHOLD}
+      - EMBEDDINGS_URL=${EMBEDDINGS_URL}
+      - EMBEDDINGS_MODEL=${EMBEDDINGS_MODEL:-google/embeddinggemma-300m}
+      - EMBEDDINGS_METRICS_URL=${EMBEDDINGS_METRICS_URL}
+      - CONVERT_MARKDOWN_URL=${CONVERT_MARKDOWN_URL}
+      - CRAWLER_URL=${CRAWLER_URL}
+      - INTERNAL_LITELLM_URL=${INTERNAL_LITELLM_URL}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_PRETTY=${LOG_PRETTY:-false}
+      - EMBEDDINGS_API_KEY_FILE=/run/secrets/EMBEDDINGS_API_KEY
+      - DEFAULT_SUPERADMIN_API_KEY_FILE=/run/secrets/DEFAULT_SUPERADMIN_API_KEY
+      - DEFAULT_ADMIN_API_KEY_FILE=/run/secrets/DEFAULT_ADMIN_API_KEY
+      - API_KEY_SECRET_FILE=/run/secrets/API_KEY_SECRET
+      - MARIADB_APP_PASSWORD_FILE=/run/secrets/MARIADB_APP_PASSWORD
+    secrets:
+      - source: bun_rag_DEFAULT_SUPERADMIN_API_KEY
+        target: DEFAULT_SUPERADMIN_API_KEY
+      - source: bun_rag_DEFAULT_ADMIN_API_KEY
+        target: DEFAULT_ADMIN_API_KEY
+      - source: bun_rag_API_KEY_SECRET
+        target: API_KEY_SECRET
+      - source: bun_rag_EMBEDDINGS_API_KEY
+        target: EMBEDDINGS_API_KEY
+      - source: bun_rag_MARIADB_APP_PASSWORD
+        target: MARIADB_APP_PASSWORD
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - rag-net
+    expose:
+      - "${BUN_PORT}"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=rag-net"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.bun-rag-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow"
+      - "traefik.http.routers.bun-rag-http-domain.rule=Host(`${DOMAIN_NAME}`) && (PathPrefix(`/api`) || PathPrefix(`/documents`) || PathPrefix(`/admin`) || Path(`/mcp`) || PathPrefix(`/console`) || PathPrefix(`/_bun`) || Path(`/extract-markdown`) || Path(`/openapi.json`))"
+      - "traefik.http.routers.bun-rag-http-domain.entrypoints=web"
+      - "traefik.http.routers.bun-rag-http-domain.middlewares=redirect-to-https"
+      - "traefik.http.routers.bun-rag-http-domain.priority=200"
+      - "traefik.http.routers.bun-rag-https.rule=Host(`${DOMAIN_NAME}`) && (PathPrefix(`/api`) || PathPrefix(`/documents`) || PathPrefix(`/admin`) || Path(`/mcp`) || PathPrefix(`/console`) || PathPrefix(`/_bun`) || Path(`/extract-markdown`) || Path(`/openapi.json`))"
+      - "traefik.http.routers.bun-rag-https.entrypoints=websecure"
+      - "traefik.http.routers.bun-rag-https.tls=true"
+      - "traefik.http.routers.bun-rag-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.bun-rag-https.priority=180"
+      - "traefik.http.routers.bun-rag-https.middlewares=bun-rag-noindex"
+      - "traefik.http.routers.bun-rag-https.service=bun-rag-svc"
+      - "traefik.http.routers.bun-rag-http-local.rule=PathPrefix(`/api`) || PathPrefix(`/documents`) || PathPrefix(`/admin`) || Path(`/mcp`) || PathPrefix(`/console`) || PathPrefix(`/_bun`) || Path(`/extract-markdown`) || Path(`/openapi.json`)"
+      - "traefik.http.routers.bun-rag-http-local.entrypoints=web"
+      - "traefik.http.routers.bun-rag-http-local.priority=50"
+      - "traefik.http.routers.bun-rag-http-local.middlewares=bun-rag-noindex"
+      - "traefik.http.routers.bun-rag-http-local.service=bun-rag-svc"
+      - "traefik.http.services.bun-rag-svc.loadbalancer.server.port=${BUN_PORT}"
+    depends_on:
+      - mariadb
+      - embedding
+      - litellm
+      - crawler
+
+  crawler:
+    image: crawler:vps-amd64
+    pull_policy: if_not_present
+    platform: ${COMPOSE_PLATFORM}
+    container_name: crawler
+    restart: unless-stopped
+    networks:
+      - rag-net
+    expose:
+      - "11235"
+    depends_on:
+      - mariadb
+
+  litellm:
+    image: litellm:vps-amd64
+    pull_policy: if_not_present
+    platform: ${COMPOSE_PLATFORM}
+    container_name: litellm
+    restart: unless-stopped
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
+      - DB_USER=${DB_USER}
+      - MARIADB_APP_PASSWORD_FILE=/run/secrets/MARIADB_APP_PASSWORD
+    secrets:
+      - source: litellm_config_json
+        target: litellm_config_json
+      - source: litellm_MARIADB_APP_PASSWORD
+        target: MARIADB_APP_PASSWORD
+    networks:
+      - rag-net
+    expose:
+      - "8001"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=rag-net"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.litellm-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow"
+      - "traefik.http.routers.litellm-http-domain.rule=Host(`${DOMAIN_NAME}`) && PathPrefix(`/llm`)"
+      - "traefik.http.routers.litellm-http-domain.entrypoints=web"
+      - "traefik.http.routers.litellm-http-domain.middlewares=redirect-to-https"
+      - "traefik.http.routers.litellm-http-domain.priority=170"
+      - "traefik.http.routers.litellm-https.rule=Host(`${DOMAIN_NAME}`) && PathPrefix(`/llm`)"
+      - "traefik.http.routers.litellm-https.entrypoints=websecure"
+      - "traefik.http.routers.litellm-https.tls=true"
+      - "traefik.http.routers.litellm-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.litellm-https.priority=160"
+      - "traefik.http.routers.litellm-https.middlewares=litellm-strip,litellm-noindex"
+      - "traefik.http.routers.litellm-https.service=litellm-svc"
+      - "traefik.http.routers.litellm-http-local.rule=PathPrefix(`/llm`)"
+      - "traefik.http.routers.litellm-http-local.entrypoints=web"
+      - "traefik.http.routers.litellm-http-local.priority=40"
+      - "traefik.http.routers.litellm-http-local.middlewares=litellm-strip,litellm-noindex"
+      - "traefik.http.routers.litellm-http-local.service=litellm-svc"
+      - "traefik.http.middlewares.litellm-strip.stripprefix.prefixes=/llm"
+      - "traefik.http.services.litellm-svc.loadbalancer.server.port=8001"
+    depends_on:
+      - mariadb
+
+  nginx:
+    image: nginx:vps-amd64
+    pull_policy: if_not_present
+    platform: ${COMPOSE_PLATFORM}
+    container_name: nginx
+    networks:
+      - rag-net
+    expose:
+      - "80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=rag-net"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.chatbot-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow"
+      - "traefik.http.routers.chatbot-http-domain.rule=Host(`${DOMAIN_NAME}`) && PathPrefix(`/client`)"
+      - "traefik.http.routers.chatbot-http-domain.entrypoints=web"
+      - "traefik.http.routers.chatbot-http-domain.middlewares=redirect-to-https"
+      - "traefik.http.routers.chatbot-http-domain.priority=220"
+      - "traefik.http.routers.chatbot-https.rule=Host(`${DOMAIN_NAME}`) && PathPrefix(`/client`)"
+      - "traefik.http.routers.chatbot-https.entrypoints=websecure"
+      - "traefik.http.routers.chatbot-https.tls=true"
+      - "traefik.http.routers.chatbot-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.chatbot-https.priority=210"
+      - "traefik.http.routers.chatbot-https.middlewares=chatbot-add-slash,chatbot-strip,chatbot-noindex"
+      - "traefik.http.routers.chatbot-https.service=chatbot-svc"
+      - "traefik.http.routers.chatbot-http-local.rule=PathPrefix(`/client`)"
+      - "traefik.http.routers.chatbot-http-local.entrypoints=web"
+      - "traefik.http.routers.chatbot-http-local.priority=70"
+      - "traefik.http.routers.chatbot-http-local.middlewares=chatbot-add-slash,chatbot-strip,chatbot-noindex"
+      - "traefik.http.routers.chatbot-http-local.service=chatbot-svc"
+      - "traefik.http.middlewares.chatbot-add-slash.redirectregex.regex=^(https?)://([^/]+)/client$"
+      - "traefik.http.middlewares.chatbot-add-slash.redirectregex.replacement=$${1}://$${2}/client/"
+      - "traefik.http.middlewares.chatbot-add-slash.redirectregex.permanent=true"
+      - "traefik.http.middlewares.chatbot-strip.stripprefix.prefixes=/client"
+      - "traefik.http.services.chatbot-svc.loadbalancer.server.port=80"
+    depends_on:
+      - litellm
+
+  traefik:
+    image: traefik:v3.6.12
+    pull_policy: if_not_present
+    platform: ${COMPOSE_PLATFORM}
+    container_name: traefik
+    restart: unless-stopped
+    environment:
+      - DOCKER_API_VERSION=1.40
+      - TRAEFIK_USERNAME=${TRAEFIK_USERNAME}
+    entrypoint:
+      - /bin/sh
+      - -ec
+    command:
+      - PASS="$$(cat /run/secrets/TRAEFIK_PASSWORD)"; printf '%s:%s\n' "$${TRAEFIK_USERNAME}" "$${PASS}" > /tmp/traefik-users; exec traefik --providers.docker=true --providers.docker.exposedbydefault=false --entrypoints.web.address=:80 --entrypoints.websecure.address=:443 --entrypoints.traefik.address=:8080 --certificatesresolvers.letsencrypt.acme.email=admin@${DOMAIN_NAME} --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json --certificatesresolvers.letsencrypt.acme.httpchallenge=true --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web --api.dashboard=true --api.insecure=false
+    secrets:
+      - source: traefik_TRAEFIK_PASSWORD
+        target: TRAEFIK_PASSWORD
+    networks:
+      - rag-net
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=rag-net"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=traefik"
+      - "traefik.http.routers.traefik-dashboard.rule=PathPrefix(`/dashboard`) || PathPrefix(`/api`)"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard.middlewares=traefik-auth"
+      - "traefik.http.middlewares.traefik-auth.basicauth.usersFile=/tmp/traefik-users"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-letsencrypt:/letsencrypt
+    depends_on:
+      - bun-rag
+      - litellm
+      - nginx
+
+volumes:
+  rag-mariadb-data:
+    name: rag-mariadb-data
+  traefik-letsencrypt:
+    name: traefik-letsencrypt
+
+secrets:
+  mariadb_MARIADB_ROOT_PASSWORD:
+    file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/mariadb/MARIADB_ROOT_PASSWORD
+  mariadb_MARIADB_APP_PASSWORD:
+    file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/mariadb/MARIADB_APP_PASSWORD
+  bun_rag_MARIADB_APP_PASSWORD:
+    file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/bun-rag/MARIADB_APP_PASSWORD
+  litellm_MARIADB_APP_PASSWORD:
+    file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/litellm/MARIADB_APP_PASSWORD
+  bun_rag_DEFAULT_SUPERADMIN_API_KEY:
+    file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/bun-rag/DEFAULT_SUPERADMIN_API_KEY
+  bun_rag_DEFAULT_ADMIN_API_KEY:
+    file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/bun-rag/DEFAULT_ADMIN_API_KEY
+  bun_rag_API_KEY_SECRET:
+    file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/bun-rag/API_KEY_SECRET
+  bun_rag_EMBEDDINGS_API_KEY:
+    file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/bun-rag/EMBEDDINGS_API_KEY
+  embedding_HF_TOKEN:
+    file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/embedding/HF_TOKEN
+  traefik_TRAEFIK_PASSWORD:
+    file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/traefik/TRAEFIK_PASSWORD
+  litellm_config_json:
+    file: ${LITELLM_CONFIG_SECRET_FILE:-../litellm/config.json}
+
+networks:
+  rag-net:
+    name: rag-net
