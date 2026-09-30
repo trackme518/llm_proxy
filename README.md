@@ -2,26 +2,26 @@
 
 Are you a museum or gallery and need help with implementation? [Reach out](https://www.muzeumprahy.cz/ai-muzeum/#formular-ai). We provide paid technical support and consultation on how and when to properly use this.
 
+## Explainer for humans
+We have built the RAG (document search) system with content management system and user interface for curators and museum employees (ie non IT users). They can upload and manage books and documents that are later fed to AI chatbot to improve its responses. We have intentionally separated the search document service from the chatbot service itself - so in theory you can connect existing chatbot to the search service (which could even be your personal claude / codex / opencode / hermes... agent ). However, we are also providing a sample chatbot service that is intended to face the public - ie non authenticated users that you want to provide service for free ( ie general public ) and we also show how to embed this chatbot on your existing website. 
+
 ## Fast Startup
 
 Once the stack is deployed locally (see [Deployment](#deployment-build--deploy-via-ghcr)), the following publicly facing websites are served through the shared Traefik entrypoint on port 80 (use `http://localhost` locally or `https://yourdomain.com` on a VPS):
 
-| URL | Service | Description |
-| --- | --- | --- |
-| `/console/` | Bun RAG | RAG admin console - manage documents, projects, organizations and API keys. Login with a Bun RAG API key. |
-| `/admin/` | Bun RAG | REST API for the admin console operations. |
-| `/api/` | Bun RAG | REST API for documents, search and ingestion. |
-| `/documents/` | Bun RAG | Document upload and management endpoints. |
-| `/extract-markdown` | Bun RAG | PDF to markdown conversion endpoint. |
-| `/mcp` | Bun RAG | MCP Streamable HTTP endpoint for LLM clients and agents (Bearer API key required). |
-| `/openapi.json` | Bun RAG | OpenAPI schema of the Bun RAG REST API. |
-| `/_bun/` | Bun RAG | Bun's built-in client runtime path, mounted automatically by `Bun.serve()` (currently unused by the console page). |
-| `/llm/console/` | LiteLLM | Chat backend admin console - manage sites, tools, provider API keys and global settings. Login with `LITELLM_KEY`. |
-| `/llm/auth` | LiteLLM | Issue temporary chat tokens for a site. |
-| `/llm/responses` | LiteLLM | Chat responses proxy (OpenAI-compatible, token required). |
-| `/llm/admin/` | LiteLLM | REST API for the LiteLLM console operations (`LITELLM_KEY` required). |
-| `/client/` | Nginx | Public chatbot iframe client (embedded on allowed external websites). |
-| `http://localhost:8080/dashboard/` | Traefik | Traefik dashboard (basic auth with `TRAEFIK_USERNAME`/`TRAEFIK_PASSWORD`, not exposed via the domain). |
+| URL | Service | Description | Intended user |
+| --- | --- | --- | --- |
+| `/console/` | Bun RAG | RAG admin console - manage documents, projects, organizations and API keys. Login with a Bun RAG API key. | editor / employee |
+| `/llm/console/` | LiteLLM | Chat backend admin console - manage sites, tools, provider API keys and global settings. Login with `LITELLM_KEY`. | IT admin |
+| `/client/` | Nginx | Public chatbot iframe client (embedded on allowed external websites). | IT admin |
+| `http://localhost:8080/dashboard/` | Traefik | Traefik dashboard (basic auth with `TRAEFIK_USERNAME`/`TRAEFIK_PASSWORD`, not exposed via the domain). | IT admin |
+| `/mcp` | Bun RAG | MCP Streamable HTTP endpoint for LLM clients and agents (Bearer API key required). | expert users |
+| `/api/` | Bun RAG | REST API for documents, search and ingestion.| developers |
+| `/documents/` | Bun RAG | Document upload and management endpoints | developers |
+| `/extract-markdown` | Bun RAG | PDF to markdown conversion endpoint | developers |
+| `/openapi.json` | Bun RAG | OpenAPI schema of the Bun RAG REST API. | AI agent |
+| `/llm/responses` | LiteLLM | Chat responses proxy (OpenAI-compatible, token required). | developers |
+| `/llm/admin/` | LiteLLM | REST API for the LiteLLM console operations (`LITELLM_KEY` required). | developers |
 
 The embedding service (`/v1/embeddings`, `/v1/models`, `/metrics`, `/extract-markdown` on its own port) and the crawler service are only reachable on the internal Docker network, not through Traefik.
 
