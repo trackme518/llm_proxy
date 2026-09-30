@@ -1,0 +1,20 @@
+# Secrets and environment files - never bake into images
+docker/secrets
+docker/.env
+litellm/config.json
+
+# Database backups
+docker/deploy/db_backup
+
+# Local artifacts
+docker/dist
+.git
+.continue
+*.DS_Store
+__pycache__
+**/__pycache__
+*.pyc
+embedding/venv
+embedding/models
+bun_rag/node_modules
+chat

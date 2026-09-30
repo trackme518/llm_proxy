@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiteLLM Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>LiteLLM Console</h1>
+    <div class="key-box">
+      <input type="password" id="apiKey" placeholder="Admin API key (LITELLM_KEY)" />
+      <button id="saveKey">Login</button>
+      <span id="keyStatus"></span>
+    </div>
+  </header>
+
+  <main>
+    <nav>
+      <button data-tab="sites" class="active">Sites</button>
+      <button data-tab="settings">Settings</button>
+    </nav>
+
+    <div id="error" class="error hidden"></div>
+
+    <section id="tab-sites">
+      <div class="toolbar">
+        <button id="newSite">+ New site</button>
+        <button id="reloadSites">Reload</button>
+      </div>
+      <table id="sitesTable">
+        <thead>
+          <tr>
+            <th>site</th><th>model</th><th>api_base</th><th>api_key</th><th>thinking</th><th>tools</th><th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <form id="siteForm" class="hidden">
+        <h2 id="formTitle">Edit site</h2>
+        <label>Site name
+          <input id="fSite" required pattern="[A-Za-z0-9_-]+" title="Letters, digits, - and _ only" />
+        </label>
+        <label>Instructions
+          <textarea id="fInstructions" rows="6"></textarea>
+        </label>
+        <div class="row">
+          <label>Model <input id="fModel" placeholder="openai/gpt-5.4-mini" /></label>
+          <label>API base <input id="fApiBase" placeholder="http://host.docker.internal:1234/v1" /></label>
+        </div>
+        <div class="row">
+          <label>API key <input id="fApiKey" type="password" placeholder="leave blank to keep current" /></label>
+          <span id="fApiKeyHint" class="hint"></span>
+        </div>
+        <div class="row">
+          <label class="inline"><input id="fThinkingModel" type="checkbox" /> thinking model</label>
+          <label>Thinking effort
+            <select id="fThinkingEffort">
+              <option value="">none</option>
+              <option value="low">low</option>
+              <option value="medium">medium</option>
+              <option value="high">high</option>
+            </select>
+          </label>
+          <label>Tool choice <input id="fToolChoice" placeholder="auto" /></label>
+        </div>
+        <label>Tools (JSON array)
+          <textarea id="fTools" rows="8" placeholder='[{"type": "mcp", ...}]'></textarea>
+        </label>
+        <label>Include (JSON array)
+          <textarea id="fInclude" rows="3" placeholder='["web_search_call.action.sources"]'></textarea>
+        </label>
+        <div class="toolbar">
+          <button type="submit" id="saveSite">Save</button>
+          <button type="button" id="cancelSite">Cancel</button>
+          <button type="button" id="deleteSite" class="danger">Delete site</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="tab-settings" class="hidden">
+      <form id="settingsForm">
+        <h2>Global settings</h2>
+        <label>Token duration (minutes)
+          <input id="sTokenDuration" type="number" min="1" />
+        </label>
+        <label>CORS allowlist (one origin per line)
+          <textarea id="sAllowlist" rows="6"></textarea>
+        </label>
+        <label>Reload key
+          <div class="row">
+            <input id="sReloadKey" readonly />
+            <button type="button" id="regenReloadKey" class="danger">Regenerate</button>
+          </div>
+        </label>
+        <div class="toolbar">
+          <button type="submit" id="saveSettings">Save settings</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

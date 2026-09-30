@@ -62,7 +62,12 @@ CRAWLER_URL=http://crawler:11235
 # ========================================
 # LiteLLM FastAPI chatbot proxy
 # ========================================
-# uses litellm/config.json loaded as docker secret
+# uses litellm/config.json loaded as docker secret (optional seed for the DB-backed site config)
+# admin key for the LiteLLM console (/llm/console) and /admin API - generate with: openssl rand -hex 32
+LITELLM_KEY=samplepassword
+# Fernet key used to encrypt site api keys stored in the database
+# (any random value works - hex from openssl rand -hex 32 or a Fernet-generated key)
+LITELLM_ENCRYPTION_KEY=samplepassword
 # ========================================
 # Traefik reverse load balancing proxy
 # ========================================

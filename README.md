@@ -1,5 +1,30 @@
 # RAG System
 
+Are you a museum or gallery and need help with implementation? [Reach out](https://www.muzeumprahy.cz/ai-muzeum/#formular-ai). We provide paid technical support and consultation on how and when to properly use this.
+
+## Fast Startup
+
+Once the stack is deployed locally (see [Deployment](#deployment-build--deploy-via-ghcr)), the following publicly facing websites are served through the shared Traefik entrypoint on port 80 (use `http://localhost` locally or `https://yourdomain.com` on a VPS):
+
+| URL | Service | Description |
+| --- | --- | --- |
+| `/console/` | Bun RAG | RAG admin console - manage documents, projects, organizations and API keys. Login with a Bun RAG API key. |
+| `/admin/` | Bun RAG | REST API for the admin console operations. |
+| `/api/` | Bun RAG | REST API for documents, search and ingestion. |
+| `/documents/` | Bun RAG | Document upload and management endpoints. |
+| `/extract-markdown` | Bun RAG | PDF to markdown conversion endpoint. |
+| `/mcp` | Bun RAG | MCP Streamable HTTP endpoint for LLM clients and agents (Bearer API key required). |
+| `/openapi.json` | Bun RAG | OpenAPI schema of the Bun RAG REST API. |
+| `/_bun/` | Bun RAG | Bun's built-in client runtime path, mounted automatically by `Bun.serve()` (currently unused by the console page). |
+| `/llm/console/` | LiteLLM | Chat backend admin console - manage sites, tools, provider API keys and global settings. Login with `LITELLM_KEY`. |
+| `/llm/auth` | LiteLLM | Issue temporary chat tokens for a site. |
+| `/llm/responses` | LiteLLM | Chat responses proxy (OpenAI-compatible, token required). |
+| `/llm/admin/` | LiteLLM | REST API for the LiteLLM console operations (`LITELLM_KEY` required). |
+| `/client/` | Nginx | Public chatbot iframe client (embedded on allowed external websites). |
+| `http://localhost:8080/dashboard/` | Traefik | Traefik dashboard (basic auth with `TRAEFIK_USERNAME`/`TRAEFIK_PASSWORD`, not exposed via the domain). |
+
+The embedding service (`/v1/embeddings`, `/v1/models`, `/metrics`, `/extract-markdown` on its own port) and the crawler service are only reachable on the internal Docker network, not through Traefik.
+
 ## Architecture Diagrams
 
 ### Dataflow Diagram
@@ -166,9 +191,9 @@ HTTPS endpoints can use their own reverse proxy, with any path prefix included i
 `EMBEDDINGS_URL`. Keep the Python container: document conversion and its metrics
 still use `CONVERT_MARKDOWN_URL` and `EMBEDDINGS_METRICS_URL` independently.
 
-Deploy code changes with `./docker/deploy/deploy.sh`. For subsequent URL/model-only
+Deploy code changes with `./docker/deploy/build.sh` followed by `./docker/deploy/deploy.sh`. For subsequent URL/model-only
 changes, use `./docker/deploy/deploy.sh --update-env` to recreate the stack with the
-new settings without rebuilding images. The legacy `/embedding` route and `inputs`
+new settings without pulling images. The legacy `/embedding` route and `inputs`
 request field are no longer supported, so upgrade the Bun and Python images together.
 
 `DB_VECTOR_DIM` must match the returned vectors (768 for full-size EmbeddingGemma).
@@ -256,33 +281,60 @@ MCP is exposed via `/mcp` in [bun_rag/src/api.ts](bun_rag/src/api.ts) and handle
 ssh -i ~/.ssh/id_ed25519 root@203.0.113.10
 
 
-## Deployment script (local + VPS)
-Use `docker/deploy/deploy.sh` for both local and VPS deploys.
+## Deployment (build + deploy via GHCR)
 
-* make sure script is executable:
-  * `chmod +x docker/deploy/deploy.sh`
+The pipeline is split into two scripts:
+
+* `docker/deploy/build.sh` — builds the five application images (`rag-bun`, `rag-embedding`, `rag-crawler`, `rag-litellm`, `rag-nginx`) for **linux/amd64 + linux/arm64** and pushes them to GHCR (GitHub Container Registry), tagged with the given version and `latest`. MariaDB and Traefik use stock library images and are not built.
+* `docker/deploy/deploy.sh` — pulls those images from GHCR and runs the stack locally, or on the VPS with `--vps`.
+
+* make sure scripts are executable:
+  * `chmod +x docker/deploy/build.sh docker/deploy/deploy.sh`
   * `chmod +x docker/deploy/update_mariadb_password.sh`
   * `chmod +x docker/deploy/delete_all.sh`
 
+### Build (publish to GHCR)
+
+Build instructions:
+
+1. Create a GitHub PAT with the `write:packages` scope (Settings -> Developer settings -> Personal access tokens).
+2. Log in to GHCR once (paste the PAT as the password):
+```bash
+echo <YOUR_PAT> | docker login ghcr.io -u <github-username> --password-stdin
+```
+3. Build and push all images:
+```bash
+./docker/deploy/build.sh
+```
+
+Commands:
+* `./docker/deploy/build.sh` — build and push all images as `v1.0.0` + `latest`
+* `./docker/deploy/build.sh --version v1.1.0` — build and push a specific version tag
+* `./docker/deploy/build.sh --no-cache` — rebuild from scratch, bypassing the build cache
+* `./docker/deploy/build.sh --owner <ghcr-owner>` — override the GHCR namespace (or set `GHCR_OWNER`)
+
+Tip: use `./docker/deploy/build.sh --no-push` to build both platforms (amd64 + arm64) locally, loaded into docker, **without publishing anything** — useful to verify the images build correctly and contain no secrets before a real push. The images appear locally as `ghcr.io/<owner>/rag-*:v1.0.0-amd64` / `-arm64`.
+
+Rollback: deploy a previous version with `./docker/deploy/deploy.sh --version v1.0.0`.
+
 ### Environment loading behavior
-* The scripts always load `docker/secrets/local.env` first.
+* The deploy scripts always load `docker/secrets/local.env` first.
 * With `--vps`, they then load `docker/secrets/vps.env` on top (adds/overrides values from `local.env`).
+* To bootstrap `docker/secrets/local.env` and `docker/secrets/vps.env` from the templates, run `./docker/make_env_from_template.sh`. It replaces every `samplepassword` placeholder with a random hex value; the litellm service accepts this format for `LITELLM_ENCRYPTION_KEY` as well as a native Fernet key.
 
 ### CORS and iframe embedding
-* LiteLLM CORS is controlled by the `allowlist` array in [litellm/config.json](litellm/config.json). This is the source of truth for `/llm/auth` and `/llm/responses`.
+* LiteLLM CORS is controlled by the `allowlist` setting (database-backed, editable via the LiteLLM console or `/llm/admin/settings`). This is the source of truth for `/llm/auth` and `/llm/responses`.
 * The chatbot nginx container uses a static iframe allowlist via `Content-Security-Policy: frame-ancestors ...` in [nginx/nginx-chatbot.conf](nginx/nginx-chatbot.conf).
 * Bun RAG keeps permissive CORS (`*`) in [bun_rag/src/http.ts](bun_rag/src/http.ts) because API access is authenticated separately and is meant to be used by individual LLM clients as well.
 
 ### Local deploy (default)
-* Builds images for your current host architecture automatically (`amd64`/`arm64` detection).
-* Deploys using local compose config.
+* Pulls images from GHCR (tag `latest` by default) and runs the stack with compose.
 
 Commands:
-* `./docker/deploy/deploy.sh`
+* `./docker/deploy/deploy.sh` — pull and run
+* `./docker/deploy/deploy.sh --version v1.0.0` — pull and run a specific image tag
 * `./docker/deploy/deploy.sh --prune` Run docker image prune -f after deploy
-* `./docker/deploy/deploy.sh --update-env` (force recreate containers with new env only, no image build)
-* `./docker/deploy/deploy.sh --no-cache` (rebuild images from scratch, bypassing the Docker build cache)
-* `./docker/deploy/deploy.sh --vps --no-cache` (same for VPS deploy)
+* `./docker/deploy/deploy.sh --update-env` (force recreate containers with new env only, no image pull)
 
 Additional maintenance scripts:
 * `./docker/deploy/backup_db.sh` Download a complete backup of the local MariaDB as a gzipped SQL dump (`docker/deploy/db_backup/mariadb_backup_<timestamp>.sql.gz`, directory is gitignored).
@@ -300,9 +352,7 @@ gunzip -c docker/deploy/db_backup/mariadb_backup_<timestamp>.sql.gz | docker com
 * Requires VPS connection variables in `docker/secrets/vps.env`:
   * `VPS_HOST`, `VPS_USER`, `VPS_PORT`, `SSH_KEY_PATH`, `VPS_REMOTE_DIR`
   * `VPS_ARCH` (`amd64`, `arm64`, `linux/amd64`, or `linux/arm64`)
-* Builds images for `VPS_ARCH`.
-* Uploads **only changed images** (by comparing local image IDs with `<remote_dir>/.image-ids` from previous upload).
-* Uploads merged env + compose file and redeploys with `--force-recreate`.
+* Uploads merged env + compose file + generated secrets via SSH, then pulls the GHCR images on the VPS and redeploys with `--force-recreate`. Since images are public on GHCR, the VPS needs no registry login.
 
 ### SSH note
 You must setup SSH key access beforehand. The script auto-starts `ssh-agent` and adds your key when needed:
@@ -310,28 +360,14 @@ You must setup SSH key access beforehand. The script auto-starts `ssh-agent` and
 * `ssh-add ~/.ssh/id_ed25519`
 
 ## Local / manual Docker setup
-* Build docker images
-  * `docker compose -f docker/docker-compose.yml up -d --build`
-  * Force clean rebuild:
-    * `docker compose -f docker/docker-compose.yml up -d --build --no-deps --force-recreate`
+* Pull and run the published images
+  * `docker compose -f docker/docker-compose.yml up -d`
+  * Recreate containers:
+    * `docker compose -f docker/docker-compose.yml up -d --no-deps --force-recreate`
 * List installed docker images
   * `docker images`
-* Export Docker images as files
-  * `docker save bun-rag:latest embedding:latest litellm:latest nginx:latest mariadb:12.1.2 -o rag-images.tar`
-    * Separate images:
-    * `docker save bun-rag:latest -o bun-rag.tar`
-    * `docker save embedding:latest -o embedding.tar`
-    * `docker save litellm:latest -o litellm.tar`
-    * `docker save nginx:latest -o nginx.tar`
-    * `docker save mariadb:12.1.2 -o mariadb.tar`
-
-Hostinger provide Docker manager that let you add docker-compose file and environment file via GUI. Alternatively just transfer these files as well. 
-
-Transfer file to VPS:
-* `scp docker/rag-images.tar user@your-vps-ip:~/`
-
-* Load from another machine
-  * `docker load -i rag-images.tar`
+* Export Docker images as files (offline transfer)
+  * `docker save ghcr.io/trackme518/rag-bun:latest ghcr.io/trackme518/rag-embedding:latest ghcr.io/trackme518/rag-litellm:latest ghcr.io/trackme518/rag-nginx:latest ghcr.io/trackme518/rag-crawler:latest mariadb:12.1.2 -o rag-images.tar`
 * Stop all docker images:
   * `docker compose -f ./docker-compose.yml down`
 
@@ -531,16 +567,22 @@ See the example code in `./nginx/www/chatbot`. You need to provide:
   }
 ```
 * `input` is the user message to chatbot
-*  `site` is the identifier for the client type (for example you might want to have different sytem prompt at main building and different system prompt at your website, or provide different AI model for the event). The `site` is a key, that must be defined in your `./litellm/config.json`.
-* `Authorization Bearer key` header, you can get this key from backend by calling `/llm/auth` endpoint. You the returned token to authentificate. Token is valid for 60 minutes by default, you can configure this in `./litellm/config.json`
+*  `site` is the identifier for the client type (for example you might want to have different sytem prompt at main building and different system prompt at your website, or provide different AI model for the event). The `site` is a key, that must be defined in the LiteLLM site configuration (console or `/llm/admin/sites`).
+* `Authorization Bearer key` header, you can get this key from backend by calling `/llm/auth` endpoint. You the returned token to authentificate. Token is valid for 60 minutes by default, you can configure this via the LiteLLM console (`token_duration`)
 * `X-Fingerprint` unique identifier for the client, used for logging
 
 ### litellm backend
 
-Change the values and rename the `./litellm/sample.config.json`. 
+Site configuration lives in the MariaDB database and is managed via the LiteLLM console or admin API. On first start, if the sites table is empty and the `litellm/config.json` docker secret is mounted, the database is seeded from it (rename `./litellm/sample.config.json` as a starting point). Without a config file, empty tables are created and you configure everything in the console.
+
 Make sure to generate all the secret keys with:
 * `openssl rand -hex 32`
+* `LITELLM_ENCRYPTION_KEY`: any random secret works, e.g. `openssl rand -hex 32` (the service also accepts a native Fernet key)
 * Provide the API key for RAG MCP inside `tools` inside `headers` field ( for `./bun_rag` image ). Make sure to provide the same API key set in `./docker/secrets/local.env` or optionally overwritten with `./docker/secrets/vps.env`.
+
+Required environment variables (set in `docker/secrets/local.env`, passed only to the litellm container as docker secrets):
+* `LITELLM_KEY` admin key for the LiteLLM console and `/admin` API
+* `LITELLM_ENCRYPTION_KEY` Fernet key used to encrypt site provider API keys stored in the database
 
 LiteLLM will to try to use `/responses` API automatically. 
 If provider does not offer responses it will automatically fallback to completations.
@@ -549,12 +591,36 @@ Even when the provider is NOT OpenAI, set the model provider prefix to OpenAI if
 
 Database password, user and table names are loaded from `./docker/secrets/local.env` (optionally overwritten with `./docker/secrets/vps.env`).
 
-`./litellm/config.json` settins:
-* `allowlist` allowed origins for requests (CORS middleware), can be loaded dynamically at runtime with `/llm/update_config` endpoint
-* `reload_key` your secret key used to authetificate the `/llm/update_config` endpoint
+Database-backed settings:
+* `allowlist` allowed origins for requests (CORS middleware)
+* `reload_key` your secret key used to authentificate the `/llm/update_config` endpoint (view/reset in the console)
 * `token_duration` how many minutes the temporary token is valid for
-* `sites` JSON array of individual settings for each `site` object. 
-* `site` JSON Object with settings for [OpenAI /v1/responses](https://deepwiki.com/openai/completions-responses-migration-pack/6-responses-api-reference), you can define tools, model name, API key and other settings there
+* `sites` per-site settings (instructions, model, api_base, api_key, tools, thinking) for [OpenAI /v1/responses](https://deepwiki.com/openai/completions-responses-migration-pack/6-responses-api-reference). Provider API keys are encrypted at rest with `LITELLM_ENCRYPTION_KEY`.
+
+#### LiteLLM console
+
+Open `https://yourdomain.com/llm/console/` (or `http://localhost/llm/console/` locally) and paste your `LITELLM_KEY` to log in. The key is kept in browser `sessionStorage` only (cleared when the tab closes, nothing is written to disk). You can create, update and delete sites (including tools and provider API keys) and edit global settings; changes apply immediately without restarts. The same operations are available as a REST API under `/llm/admin/sites` and `/llm/admin/settings`, authenticated with `Authorization: Bearer <LITELLM_KEY>`:
+
+```bash
+# list sites (api keys are never returned, only a hint)
+curl -H "Authorization: Bearer <LITELLM_KEY>" http://localhost/llm/admin/sites
+
+# create a site
+curl -X POST -H "Authorization: Bearer <LITELLM_KEY>" -H "Content-Type: application/json" \
+  http://localhost/llm/admin/sites \
+  -d '{"site":"default","instructions":"You are a helpful assistant.","model":"openai/gemma-4-e4b-it","api_base":"http://host.docker.internal:1234/v1","api_key":"sk-...","thinking_model":false,"tools":[],"tool_choice":"auto"}'
+
+# update a site (omit api_key to keep the current one)
+curl -X PUT -H "Authorization: Bearer <LITELLM_KEY>" -H "Content-Type: application/json" \
+  http://localhost/llm/admin/sites/default \
+  -d '{"site":"default","model":"openai/gpt-5.4-mini","api_base":"https://api.openai.com/v1","api_key":"sk-new","thinking_model":true,"thinking_effort":"low","tools":[],"tool_choice":"auto"}'
+
+# delete a site
+curl -X DELETE -H "Authorization: Bearer <LITELLM_KEY>" http://localhost/llm/admin/sites/default
+
+# global settings (token_duration, allowlist, reload_key)
+curl -H "Authorization: Bearer <LITELLM_KEY>" http://localhost/llm/admin/settings
+```
 
 ### LM System Prompt Example
 
@@ -602,3 +668,18 @@ def create_tables(settings: Settings) -> None:
                 if not exc.args or exc.args[0] != 1060:
                     raise
 ```
+
+## License
+
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+See [https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html) for the full license text.
+
+## Disclaimer
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

@@ -33,3 +33,9 @@ mcp_url=https://your-vps-domain.example.com/mcp
 LITELLM_API_BASE=https://api.openai.com/v1
 LITELLM_MODEL=gpt-5.4-mini
 thinking_model=true
+
+# Optional: override the LiteLLM admin console key and site api-key encryption
+# key on the VPS. By default both come from local.env; only uncomment to use
+# different values on the VPS than locally.
+# LITELLM_KEY=samplepassword
+# LITELLM_ENCRYPTION_KEY=samplepassword

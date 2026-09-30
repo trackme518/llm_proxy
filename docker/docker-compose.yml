@@ -26,7 +26,7 @@ services:
       - rag-net
 
   embedding:
-    image: embedding:vps-amd64
+    image: ${IMAGE_OWNER:-ghcr.io/trackme518}/rag-embedding:${IMAGE_TAG:-latest}
     pull_policy: if_not_present
     platform: ${COMPOSE_PLATFORM}
     container_name: embedding
@@ -47,7 +47,7 @@ services:
       - mariadb
 
   bun-rag:
-    image: bun-rag:vps-amd64
+    image: ${IMAGE_OWNER:-ghcr.io/trackme518}/rag-bun:${IMAGE_TAG:-latest}
     pull_policy: if_not_present
     platform: ${COMPOSE_PLATFORM}
     container_name: bun-rag
@@ -125,7 +125,7 @@ services:
       - crawler
 
   crawler:
-    image: crawler:vps-amd64
+    image: ${IMAGE_OWNER:-ghcr.io/trackme518}/rag-crawler:${IMAGE_TAG:-latest}
     pull_policy: if_not_present
     platform: ${COMPOSE_PLATFORM}
     container_name: crawler
@@ -138,7 +138,7 @@ services:
       - mariadb
 
   litellm:
-    image: litellm:vps-amd64
+    image: ${IMAGE_OWNER:-ghcr.io/trackme518}/rag-litellm:${IMAGE_TAG:-latest}
     pull_policy: if_not_present
     platform: ${COMPOSE_PLATFORM}
     container_name: litellm
@@ -149,11 +149,17 @@ services:
       - MARIADB_DATABASE=${MARIADB_DATABASE}
       - DB_USER=${DB_USER}
       - MARIADB_APP_PASSWORD_FILE=/run/secrets/MARIADB_APP_PASSWORD
+      - LITELLM_KEY_FILE=/run/secrets/LITELLM_KEY
+      - LITELLM_ENCRYPTION_KEY_FILE=/run/secrets/LITELLM_ENCRYPTION_KEY
     secrets:
       - source: litellm_config_json
         target: litellm_config_json
       - source: litellm_MARIADB_APP_PASSWORD
         target: MARIADB_APP_PASSWORD
+      - source: litellm_LITELLM_KEY
+        target: LITELLM_KEY
+      - source: litellm_LITELLM_ENCRYPTION_KEY
+        target: LITELLM_ENCRYPTION_KEY
     networks:
       - rag-net
     expose:
@@ -186,7 +192,7 @@ services:
       - mariadb
 
   nginx:
-    image: nginx:vps-amd64
+    image: ${IMAGE_OWNER:-ghcr.io/trackme518}/rag-nginx:${IMAGE_TAG:-latest}
     pull_policy: if_not_present
     platform: ${COMPOSE_PLATFORM}
     container_name: nginx
@@ -278,6 +284,10 @@ secrets:
     file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/bun-rag/MARIADB_APP_PASSWORD
   litellm_MARIADB_APP_PASSWORD:
     file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/litellm/MARIADB_APP_PASSWORD
+  litellm_LITELLM_KEY:
+    file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/litellm/LITELLM_KEY
+  litellm_LITELLM_ENCRYPTION_KEY:
+    file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/litellm/LITELLM_ENCRYPTION_KEY
   bun_rag_DEFAULT_SUPERADMIN_API_KEY:
     file: ${SECRETS_GENERATED_DIR:-./secrets/generated}/bun-rag/DEFAULT_SUPERADMIN_API_KEY
   bun_rag_DEFAULT_ADMIN_API_KEY:

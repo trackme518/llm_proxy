@@ -107,7 +107,7 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 RUN pip install --no-cache-dir --upgrade pip \
-  && pip install --no-cache-dir "litellm>=1.83.0" fastapi uvicorn gunicorn pydantic python-dotenv pymysql orjson
+  && pip install --no-cache-dir "litellm>=1.83.0" fastapi uvicorn gunicorn pydantic python-dotenv pymysql orjson cryptography
 
 FROM python-base AS litellm-runtime
 ENV PATH="/opt/venv/bin:$PATH"
@@ -115,6 +115,7 @@ WORKDIR /app
 
 COPY --from=litellm-deps /opt/venv /opt/venv
 COPY litellm/main.py /app/litellm/main.py
+COPY litellm/console /app/litellm/console
 COPY docker/entrypoint-litellm.sh /entrypoint-litellm.sh
 RUN chmod +x /entrypoint-litellm.sh
 WORKDIR /app/litellm
