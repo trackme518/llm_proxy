@@ -11,9 +11,9 @@ Once the stack is deployed locally (see [Deployment](#deployment-build--deploy-v
 
 | URL | Service | Description | Intended user |
 | --- | --- | --- | --- |
+| `/client/` | Nginx | Public chatbot iframe client (embedded on allowed external websites). | public |
 | `/console/` | Bun RAG | RAG admin console - manage documents, projects, organizations and API keys. Login with a Bun RAG API key. | editor / employee |
 | `/llm/console/` | LiteLLM | Chat backend admin console - manage sites, tools, provider API keys and global settings. Login with `LITELLM_KEY`. | IT admin |
-| `/client/` | Nginx | Public chatbot iframe client (embedded on allowed external websites). | IT admin |
 | `http://localhost:8080/dashboard/` | Traefik | Traefik dashboard (basic auth with `TRAEFIK_USERNAME`/`TRAEFIK_PASSWORD`, not exposed via the domain). | IT admin |
 | `/mcp` | Bun RAG | MCP Streamable HTTP endpoint for LLM clients and agents (Bearer API key required). | expert users |
 | `/openapi.json` | Bun RAG | OpenAPI schema of the Bun RAG REST API. | AI agent |
